@@ -107,36 +107,31 @@ export const fetchAnimepaheInfo = async ({ animeId, page = 1, list = {} }) => {
     }
 };
 
-export const fetchAnimepaheEpisodeSource = async ({ episodeId, list = [] }) => {
+export const fetchAnimepaheEpisodeSource = async ({ animeId, episodeId, list = [] }) => {
     try {
         if (!episodeId) return {
             error: true,
             error_message: "No episodeId provided"
         };
 
-        const { data } = await axios.get(animepaheApi, {
-            params: {
-                m: "links",
-                id: episodeId
-            }
+        const resp = await axios.get(`https://animepahe.com/play/${animeId}/${episodeId}`);
+        const $ = load(resp.data);
+        const sources = [];
+        
+        $("#resolutionMenu").children().each((index, elem) => {
+            let referrer = $(elem).attr("data-src"); 
+            let resolution = parseInt($(elem).attr("data-resolution"));
+            let audio = $(elem).attr("data-audio");
+            sources.push({ referrer, resolution, audio })
         });
+        
+        await Promise.all(sources.map(async (obj) => {
+            let url = await extractSource(obj.referrer);
+            obj.url = url;
+        }));
 
+        return sources;
 
-        await Promise.all(data.data.map(async (source) => {
-            const key = Object.keys(source)[0]
-            const sourceUrl = await extractSource(source[key].kwik);
-
-            list.push({
-                quality: key,
-                audioLanguage: source[key].audio,
-                file: sourceUrl
-            })
-        }))
-
-        return {
-            referer: 'https://kwik.cx/',
-            sources: list.sort((a, b) => b.audioLanguage.localeCompare(a.audioLanguage))
-        };
     } catch (error) {
         // console.log(error)
         return {

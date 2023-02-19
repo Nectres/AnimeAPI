@@ -26,10 +26,9 @@ router.get('/info/:animeId', async (req, res) => {
     res.json(data).status(200);
 });
 
-router.get('/watch/:episodeId', async (req, res) => {
-    const episodeId = req.params.episodeId;
-
-    const data = await fetchAnimepaheEpisodeSource({ episodeId });
+router.get('/watch/:animeId/:episodeId', async (req, res) => {
+    const { animeId, episodeId } = req.params;
+    const data = await fetchAnimepaheEpisodeSource({ animeId, episodeId });
     res.json(data).status(200);
 });
 
